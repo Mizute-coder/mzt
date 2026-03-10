@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Charles J. Diene — Maintenance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --white:#ffffff;--bg:#f7f8fa;
+  --blue:#2c6fad;--blue-l:#4d8fc4;--blue-d:#1a4f82;
+  --ink:#1c2b3a;--slate:#4a5e72;--slate-l:#7a90a4;
+  --tag-bg:#e8f0f8;--border:#dce2ea;
+  --card-bg:rgba(255,255,255,.85);
+  --card-border:rgba(220,226,234,.8);
+  --card-shadow:rgba(44,111,173,.10);
+}
+
+[data-theme="dark"] {
+  --white:#0d1f35;--bg:#0a1929;
+  --ink:#e8f0f8;--slate:#a0b4c8;--slate-l:#6a8099;
+  --tag-bg:rgba(44,111,173,.18);--border:rgba(77,143,196,.18);
+  --card-bg:rgba(13,31,53,.85);
+  --card-border:rgba(77,143,196,.2);
+  --card-shadow:rgba(44,111,173,.25);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--white);
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  overflow:hidden;
+  position:relative;
+  transition:background .35s,color .35s;
+}
+
+canvas {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  opacity:.55;
+}
+
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events:none;
+}
+
+.mesh {
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(44,111,173,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 80%, rgba(26,79,130,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(77,143,196,.05) 0%, transparent 70%);
+  animation: meshFloat 12s ease-in-out infinite alternate;
+}
+@keyframes meshFloat {
+  0%   { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.05) rotate(1deg); }
+}
+
+/* ── CONTROLS (top-right) ── */
+.controls {
+  position:fixed;
+  top:1.25rem;right:1.25rem;
+  z-index:100;
+  display:flex;align-items:center;gap:.5rem;
+}
+
+.btn-ctrl {
+  display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  border-radius:2rem;
+  padding:.38rem .85rem;
+  font-family:'DM Sans',sans-serif;
+  font-size:.72rem;font-weight:600;
+  color:var(--slate);
+  cursor:pointer;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:background .2s,color .2s,border-color .2s,box-shadow .2s;
+  box-shadow:0 2px 8px rgba(44,111,173,.08);
+  letter-spacing:.03em;
+}
+.btn-ctrl:hover {
+  color:var(--blue);
+  border-color:rgba(44,111,173,.35);
+  box-shadow:0 4px 14px rgba(44,111,173,.15);
+}
+
+/* lang toggle active state */
+.btn-lang .lang-opt { opacity:.4; transition:opacity .2s; }
+.btn-lang .lang-opt.active { opacity:1; color:var(--blue); }
+.lang-sep { opacity:.2; }
+
+/* ── CARD ── */
+.card {
+  position:relative;
+  z-index:10;
+  background:var(--card-bg);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--card-border);
+  border-radius:1.5rem;
+  padding:3.5rem 3rem;
+  max-width:520px;
+  width:90%;
+  text-align:center;
+  box-shadow:
+    0 4px 6px rgba(44,111,173,.04),
+    0 20px 60px var(--card-shadow),
+    0 0 0 1px rgba(255,255,255,.06) inset;
+  animation: cardIn .9s cubic-bezier(.16,1,.3,1) both;
+  transition:background .35s,border-color .35s,box-shadow .35s;
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(30px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+.logo {
+  display:inline-flex;
+  align-items:center;
+  gap:.65rem;
+  margin-bottom:2.5rem;
+  animation: fadeUp .7s .1s cubic-bezier(.16,1,.3,1) both;
+}
+.logo-avatar {
+  width:40px;height:40px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--blue-l));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:.95rem;
+  box-shadow:0 4px 12px rgba(44,111,173,.3);
+}
+.logo-text {
+  font-family:'DM Serif Display',serif;
+  font-size:1.05rem;color:var(--ink);
+  line-height:1.1;text-align:left;
+  transition:color .35s;
+}
+.logo-text small {
+  display:block;
+  font-family:'DM Sans',sans-serif;
+  font-size:.62rem;font-weight:500;
+  color:var(--slate-l);letter-spacing:.07em;text-transform:uppercase;
+  transition:color .35s;
+}
+
+.icon-wrap {
+  width:72px;height:72px;
+  border-radius:1.1rem;
+  background:linear-gradient(135deg,var(--blue-d),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.8rem;
+  font-size:2rem;
+  box-shadow:0 8px 28px rgba(44,111,173,.25);
+  animation: iconPulse 3s ease-in-out infinite, fadeUp .7s .2s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes iconPulse {
+  0%,100% { box-shadow:0 8px 28px rgba(44,111,173,.25); }
+  50%      { box-shadow:0 8px 40px rgba(44,111,173,.45); }
+}
+
+.eyebrow {
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--tag-bg);color:var(--blue);
+  font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  padding:.3rem .85rem;border-radius:2rem;
+  border:1px solid rgba(44,111,173,.18);
+  margin-bottom:1.1rem;
+  animation: fadeUp .7s .25s cubic-bezier(.16,1,.3,1) both;
+  transition:background .35s;
+}
+.eyebrow-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--blue);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+h1 {
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(1.8rem,4vw,2.6rem);
+  line-height:1.15;color:var(--ink);
+  margin-bottom:.9rem;
+  animation: fadeUp .7s .32s cubic-bezier(.16,1,.3,1) both;
+  transition:color .35s;
+}
+h1 em { font-style:italic;color:var(--blue); }
+
+.desc {
+  font-size:.9rem;color:var(--slate);
+  line-height:1.8;max-width:380px;margin:0 auto 2rem;
+  animation: fadeUp .7s .4s cubic-bezier(.16,1,.3,1) both;
+  transition:color .35s;
+}
+
+.progress-wrap {
+  margin-bottom:2rem;
+  animation: fadeUp .7s .48s cubic-bezier(.16,1,.3,1) both;
+}
+.progress-label {
+  display:flex;justify-content:space-between;
+  font-size:.72rem;font-weight:600;color:var(--slate-l);
+  letter-spacing:.05em;text-transform:uppercase;
+  margin-bottom:.55rem;
+  transition:color .35s;
+}
+.progress-bar-bg {
+  height:5px;background:var(--border);
+  border-radius:3px;overflow:hidden;
+  transition:background .35s;
+}
+.progress-bar-fill {
+  height:100%;width:0;
+  background:linear-gradient(90deg,var(--blue-d),var(--blue-l));
+  border-radius:3px;
+  animation: progressFill 2.5s 1s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes progressFill { to { width:73%; } }
+
+.tags {
+  display:flex;flex-wrap:wrap;gap:.45rem;
+  justify-content:center;margin-bottom:2rem;
+  animation: fadeUp .7s .56s cubic-bezier(.16,1,.3,1) both;
+}
+.tag {
+  background:var(--tag-bg);color:var(--blue);
+  font-size:.7rem;font-weight:600;
+  padding:.28rem .75rem;border-radius:2rem;
+  border:1px solid rgba(44,111,173,.15);
+  transition:background .35s;
+}
+
+.contact-row {
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  font-size:.8rem;color:var(--slate-l);
+  animation: fadeUp .7s .64s cubic-bezier(.16,1,.3,1) both;
+  transition:color .35s;
+}
+.contact-row a {
+  color:var(--blue);font-weight:600;text-decoration:none;
+  border-bottom:1px solid rgba(44,111,173,.25);
+  transition:border-color .2s;
+}
+.contact-row a:hover { border-color:var(--blue); }
+
+.divider { width:1px;height:14px;background:var(--border);transition:background .35s; }
+
+@keyframes fadeUp {
+  from { opacity:0;transform:translateY(16px); }
+  to   { opacity:1;transform:translateY(0); }
+}
+
+.deco { position:fixed;z-index:2;pointer-events:none; }
+.deco-1 {
+  width:320px;height:320px;border-radius:50%;
+  border:1px solid rgba(44,111,173,.07);
+  top:-80px;left:-80px;
+  animation: spin 40s linear infinite;
+}
+.deco-2 {
+  width:200px;height:200px;border-radius:50%;
+  border:1px solid rgba(44,111,173,.06);
+  bottom:-50px;right:-50px;
+  animation: spin 28s linear infinite reverse;
+}
+.deco-3 {
+  width:100px;height:100px;border-radius:50%;
+  border:1px solid rgba(44,111,173,.08);
+  bottom:20%;right:15%;
+  animation: spin 18s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="mesh"></div>
+<canvas id="c"></canvas>
+
+<div class="deco deco-1"></div>
+<div class="deco deco-2"></div>
+<div class="deco deco-3"></div>
+
+<!-- Controls -->
+<div class="controls">
+  <!-- Lang toggle -->
+  <button class="btn-ctrl btn-lang" id="btnLang" aria-label="Switch language">
+    <span class="lang-opt active" id="langFR">FR</span>
+    <span class="lang-sep">/</span>
+    <span class="lang-opt" id="langEN">EN</span>
+  </button>
+  <!-- Theme toggle -->
+  <button class="btn-ctrl" id="btnTheme" aria-label="Toggle theme">
+    <span id="themeIcon">🌙</span>
+    <span id="themeLabel">Nuit</span>
+  </button>
+</div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-avatar">CD</div>
+    <div class="logo-text">Charles J. Diene<small id="lblPortfolio">Portfolio</small></div>
+  </div>
+
+  <div class="icon-wrap">🛠</div>
+
+  <div class="eyebrow"><span class="eyebrow-dot"></span><span id="lblEyebrow">En maintenance</span></div>
+
+  <h1 id="lblTitle">Bientôt de <em>retour</em></h1>
+
+  <p class="desc" id="lblDesc">
+    Le site est en cours de mise à jour. Je travaille à vous offrir 
+    une meilleure expérience. Revenez très prochainement.
+  </p>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="lblProgress">Avancement</span>
+      <span>73%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="tags">
+    <span class="tag">Cybersécurité</span>
+    <span class="tag">Réseaux</span>
+    <span class="tag">BUT R&T → Master UBO</span>
+    <span class="tag" id="tagAlt">Alternance 2026</span>
+  </div>
+
+  <div class="contact-row">
+    <a href="mailto:charles.diene@etudiant.univ-brest.fr" id="lblContact">Me contacter</a>
+    <div class="divider"></div>
+    <a href="https://www.linkedin.com/in/c-diene" target="_blank">LinkedIn</a>
+    <div class="divider"></div>
+    <span id="lblLocation">Brest, France</span>
+  </div>
+</div>
+
+<script>
+/* ─── TRANSLATIONS ─── */
+const i18n = {
+  fr: {
+    title: 'Bientôt de <em>retour</em>',
+    eyebrow: 'En maintenance',
+    desc: 'Le site est en cours de mise à jour. Je travaille à vous offrir une meilleure expérience. Revenez très prochainement.',
+    progress: 'Avancement',
+    contact: 'Me contacter',
+    location: 'Brest, France',
+    portfolio: 'Portfolio',
+    tagAlt: 'Alternance 2026',
+    themeLight: 'Jour',
+    themeDark: 'Nuit',
+    docLang: 'fr',
+  },
+  en: {
+    title: 'Coming <em>soon</em>',
+    eyebrow: 'Under maintenance',
+    desc: 'The site is being updated. I\'m working to offer you a better experience. Check back very soon.',
+    progress: 'Progress',
+    contact: 'Contact me',
+    location: 'Brest, France',
+    portfolio: 'Portfolio',
+    tagAlt: 'Work-study 2026',
+    themeLight: 'Day',
+    themeDark: 'Night',
+    docLang: 'en',
+  }
+};
+
+let lang = 'fr';
+let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+function applyTheme(t) {
+  theme = t;
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+  const isDark = t === 'dark';
+  document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = isDark ? i18n[lang].themeLight : i18n[lang].themeDark;
+}
+
+function applyLang(l) {
+  lang = l;
+  const t = i18n[l];
+  document.documentElement.lang = t.docLang;
+  document.getElementById('lblTitle').innerHTML = t.title;
+  document.getElementById('lblEyebrow').textContent = t.eyebrow;
+  document.getElementById('lblDesc').textContent = t.desc;
+  document.getElementById('lblProgress').textContent = t.progress;
+  document.getElementById('lblContact').textContent = t.contact;
+  document.getElementById('lblLocation').textContent = t.location;
+  document.getElementById('lblPortfolio').textContent = t.portfolio;
+  document.getElementById('tagAlt').textContent = t.tagAlt;
+  // theme label
+  const isDark = theme === 'dark';
+  document.getElementById('themeLabel').textContent = isDark ? t.themeLight : t.themeDark;
+  // lang button active state
+  document.getElementById('langFR').classList.toggle('active', l === 'fr');
+  document.getElementById('langEN').classList.toggle('active', l === 'en');
+}
+
+// Init
+applyTheme(theme);
+applyLang('fr');
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  applyTheme(theme === 'dark' ? 'light' : 'dark');
+});
+
+document.getElementById('btnLang').addEventListener('click', () => {
+  applyLang(lang === 'fr' ? 'en' : 'fr');
+});
+
+// Respect OS preference change
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  applyTheme(e.matches ? 'dark' : 'light');
+});
+
+/* ─── CANVAS ─── */
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], nodes = [];
+
+const COLORS = ['rgba(44,111,173,', 'rgba(26,79,130,', 'rgba(77,143,196,'];
+
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+class Particle {
+  constructor() { this.reset(true); }
+  reset(init) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H : H + 10;
+    this.r = Math.random() * 1.8 + .4;
+    this.vx = (Math.random() - .5) * .4;
+    this.vy = -(Math.random() * .6 + .2);
+    this.alpha = Math.random() * .5 + .1;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+  update() { this.x += this.vx; this.y += this.vy; if (this.y < -10) this.reset(false); }
+  draw() {
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color + this.alpha + ')'; ctx.fill();
+  }
+}
+
+class Node {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W; this.y = Math.random() * H;
+    this.vx = (Math.random() - .5) * .25; this.vy = (Math.random() - .5) * .25;
+    this.r = Math.random() * 2 + 1;
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.x < 0 || this.x > W) this.vx *= -1;
+    if (this.y < 0 || this.y > H) this.vy *= -1;
+  }
+  draw() {
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(44,111,173,.25)'; ctx.fill();
+  }
+}
+
+function init() {
+  resize();
+  particles = []; for (let i = 0; i < 60; i++) particles.push(new Particle());
+  nodes = []; for (let i = 0; i < 28; i++) nodes.push(new Node());
+}
+
+function drawConnections() {
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 130) {
+        ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(44,111,173,${(.12 * (1 - dist/130)).toFixed(3)})`;
+        ctx.lineWidth = .7; ctx.stroke();
+      }
+    }
+  }
+}
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawConnections();
+  nodes.forEach(n => { n.update(); n.draw(); });
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('resize', () => { resize(); nodes.forEach(n => n.reset()); });
+init(); loop();
+</script>
+</body>
+</html>
