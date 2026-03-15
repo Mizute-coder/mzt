@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOVE FORGE — Keyboard Movement Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23080c10'/><rect x='4' y='10' width='24' height='14' rx='2' fill='none' stroke='%23ffe600' stroke-width='1.5'/><rect x='7' y='13' width='5' height='4' rx='1' fill='%23ffe600' opacity='0.7'/><rect x='14' y='13' width='5' height='4' rx='1' fill='%23ffe600' opacity='0.7'/><rect x='21' y='13' width='4' height='4' rx='1' fill='%23ffe600' opacity='0.7'/><rect x='10' y='19' width='12' height='3' rx='1' fill='%23ffe600' opacity='0.5'/></svg>">
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: #0d1520;
+    --border: #1a2a3a;
+    --accent: #00f0ff;
+    --accent2: #ff3c6e;
+    --accent3: #ffe600;
+    --accent4: #00ff88;
+    --text: #c8dcea;
+    --dim: #4a6070;
+    --glow: 0 0 18px #00f0ff55;
+    --glow2: 0 0 18px #ff3c6e55;
+    --glow4: 0 0 16px #00ff8855;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(90deg, rgba(0,240,255,0.05), transparent);
+  }
+  .logo { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 900; letter-spacing: 6px; color: var(--accent); text-shadow: var(--glow); }
+  .logo span { color: var(--accent4); text-shadow: var(--glow4); }
+  .badge { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 3px; color: var(--dim); border: 1px solid var(--border); padding: 4px 10px; }
+
+  main {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    height: calc(100vh - 103px);
+  }
+
+  aside {
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+    background: var(--surface);
+  }
+
+  .section-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.58rem;
+    letter-spacing: 4px;
+    color: var(--dim);
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+
+  .exercise-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.58rem;
+    letter-spacing: 1px;
+    padding: 10px 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    line-height: 1.6;
+    width: 100%;
+  }
+  .exercise-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .exercise-btn.active { background: rgba(0,240,255,0.08); border-color: var(--accent); color: var(--accent); text-shadow: var(--glow); }
+  .exercise-btn .ex-sub { color: var(--dim); font-size: 0.5rem; letter-spacing: 1px; display: block; margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
+  .exercise-btn.active .ex-sub { color: #3a7a8a; }
+
+  .start-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 4px;
+    padding: 13px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(0,240,255,0.05));
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    text-shadow: var(--glow);
+    box-shadow: var(--glow);
+    transition: all 0.2s;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  .start-btn:hover { background: rgba(0,240,255,0.3); }
+  .start-btn.stop { border-color: var(--accent2); color: var(--accent2); background: rgba(255,60,110,0.1); text-shadow: var(--glow2); box-shadow: var(--glow2); }
+
+  .stat-block { font-size: 0.68rem; color: var(--dim); line-height: 2.2; }
+  .stat-block span { color: var(--accent); }
+
+  /* ===== GAME AREA ===== */
+  #arena {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #0c1820 0%, #070b0f 100%);
+  }
+
+  /* KEYBOARD DISPLAY */
+  #kb-display {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .kb-row { display: flex; gap: 5px; }
+
+  .key {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13,21,32,0.9);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    transition: all 0.08s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    flex-direction: column;
+    gap: 1px;
+  }
+  .key .key-sub { font-size: 0.45rem; color: #2a4050; font-family: 'Share Tech Mono', monospace; }
+
+  .key.move-key {
+    border-color: rgba(0,240,255,0.3);
+    color: rgba(0,240,255,0.6);
+  }
+  .key.move-key .key-sub { color: rgba(0,240,255,0.3); }
+
+  .key.highlighted {
+    background: rgba(0,240,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+  .key.pressed {
+    background: rgba(0,240,255,0.35);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px #00f0ffaa;
+    transform: scale(0.9);
+  }
+  /* Sprint key (SHIFT) pressed state */
+  #key-shift.pressed {
+    background: rgba(255,60,110,0.3);
+    border-color: var(--accent2);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255,60,110,0.7);
+    transform: scale(0.9);
+  }
+  #key-shift.highlighted {
+    background: rgba(255,60,110,0.15);
+    border-color: var(--accent2);
+    color: var(--accent2);
+    box-shadow: var(--glow2);
+  }
+  /* Crouch key (CTRL) pressed state */
+  #key-control.pressed {
+    background: rgba(176,111,255,0.3);
+    border-color: #b06fff;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(176,111,255,0.7);
+    transform: scale(0.9);
+  }
+  #key-control.highlighted {
+    background: rgba(176,111,255,0.15);
+    border-color: #b06fff;
+    color: #b06fff;
+    box-shadow: 0 0 16px rgba(176,111,255,0.4);
+  }
+  /* Space key pressed state */
+  #key-\ .pressed, [id="key- "].pressed {
+    background: rgba(255,230,0,0.3);
+    border-color: var(--accent3);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255,230,0,0.6);
+  }
+  [id="key- "].highlighted {
+    background: rgba(255,230,0,0.12);
+    border-color: var(--accent3);
+    color: var(--accent3);
+    box-shadow: 0 0 14px rgba(255,230,0,0.4);
+  }
+  .key.pressed-wrong {
+    background: rgba(255,60,110,0.25);
+    border-color: var(--accent2);
+    color: var(--accent2);
+    box-shadow: var(--glow2);
+    transform: scale(0.9);
+  }
+  .key.wide { width: 68px; }
+  .key.xwide { width: 112px; }
+
+  /* PLAYER */
+  #player {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 14px var(--accent), 0 0 30px rgba(0,240,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: left 0.05s linear, top 0.05s linear;
+    z-index: 15;
+  }
+  #player::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* TARGETS */
+  .target-zone {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed rgba(0,240,255,0.3);
+    transform: translate(-50%, -50%);
+    animation: pulse-ring 1.5s infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse-ring {
+    0%, 100% { box-shadow: 0 0 8px rgba(0,240,255,0.2); }
+    50% { box-shadow: 0 0 20px rgba(0,240,255,0.5); }
+  }
+  .target-zone.reached {
+    border-color: var(--accent4);
+    box-shadow: 0 0 20px rgba(0,255,136,0.5);
+    animation: none;
+  }
+
+  /* OBSTACLE */
+  .obstacle {
+    position: absolute;
+    background: rgba(255,60,110,0.12);
+    border: 1px solid rgba(255,60,110,0.4);
+    box-shadow: inset 0 0 12px rgba(255,60,110,0.1);
+    pointer-events: none;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 18px;
+    display: flex;
+    gap: 12px;
+    pointer-events: none;
+    z-index: 20;
+  }
+  .hud-box {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--dim);
+    background: rgba(8,12,16,0.8);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    backdrop-filter: blur(4px);
+    min-width: 80px;
+  }
+  .hud-box .val { font-size: 1.4rem; color: var(--accent); text-shadow: var(--glow); display: block; line-height: 1; margin-top: 2px; }
+  .hud-box .val.red { color: var(--accent2); }
+  .hud-box .val.green { color: var(--accent4); text-shadow: var(--glow4); }
+
+  /* DIRECTION PROMPT */
+  #dir-prompt {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  #ready-msg {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 6px;
+    color: var(--dim);
+    animation: blink 1.2s infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  /* COMBO PROMPT (direction sequence) */
+  #combo-display {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    background: rgba(8,12,16,0.85);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+  }
+  .combo-arrow {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    color: var(--dim);
+    transition: all 0.15s;
+    min-width: 36px;
+    text-align: center;
+  }
+  .combo-arrow.done { color: var(--accent4); text-shadow: var(--glow4); }
+  .combo-arrow.current { color: var(--accent); text-shadow: var(--glow); animation: pulse-arrow 0.5s infinite alternate; }
+  .combo-arrow.wrong { color: var(--accent2); animation: shake 0.3s; }
+  @keyframes pulse-arrow { from { opacity: 0.7; } to { opacity: 1; transform: scale(1.1); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+  /* SCORE POP */
+  .score-pop {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--accent4);
+    text-shadow: var(--glow4);
+    pointer-events: none;
+    animation: floatup 0.8s forwards;
+    z-index: 30;
+  }
+  @keyframes floatup { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+
+  /* Exercise description */
+  #ex-desc {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--dim);
+    white-space: nowrap;
+    background: rgba(8,12,16,0.7);
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* RESULTS */
+  #results-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(8,12,16,0.93);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 22px;
+    backdrop-filter: blur(8px);
+  }
+  #results-overlay.show { display: flex; }
+  .result-title { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; letter-spacing: 8px; color: var(--accent4); text-shadow: var(--glow4); }
+  .result-grid { display: grid; grid-template-columns: repeat(3, 140px); gap: 14px; }
+  .result-card { background: var(--surface); border: 1px solid var(--border); padding: 14px; text-align: center; }
+  .result-card .r-label { font-size: 0.58rem; letter-spacing: 2px; color: var(--dim); margin-bottom: 6px; }
+  .result-card .r-val { font-family: 'Orbitron', sans-serif; font-size: 1.7rem; font-weight: 900; color: var(--accent); text-shadow: var(--glow); }
+  .replay-btn { font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 4px; padding: 11px 32px; background: transparent; border: 1px solid var(--accent4); color: var(--accent4); cursor: pointer; text-shadow: var(--glow4); box-shadow: var(--glow4); transition: all 0.2s; }
+  .replay-btn:hover { background: rgba(0,255,136,0.1); }
+
+  .progress-bar { height: 3px; background: var(--border); position: absolute; bottom: 0; left: 0; right: 0; z-index: 20; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent4), var(--accent)); transition: width 0.1s linear; width: 0%; }
+
+  /* NAV */
+  .forge-nav{position:relative;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:46px;border-bottom:1px solid var(--border);background:rgba(8,12,16,0.98);flex-shrink:0;}
+  .forge-nav-logo{font-family:'Orbitron',monospace;font-size:0.85rem;font-weight:900;letter-spacing:5px;color:var(--accent);text-shadow:var(--glow);text-decoration:none;}
+  .forge-nav-links{display:flex;align-items:center;gap:2px;}
+  .fnl{font-size:0.6rem;letter-spacing:2px;color:var(--dim);text-decoration:none;padding:5px 11px;border:1px solid transparent;transition:all 0.2s;cursor:pointer;background:none;font-family:'Share Tech Mono',monospace;}
+  .fnl:hover{color:var(--accent);border-color:var(--border);background:rgba(0,240,255,0.05);}
+  .fnl.cur{color:var(--accent3);border-color:var(--border);background:rgba(255,230,0,0.06);}
+  .fnl.lb{color:var(--accent3);}
+  .fnl.lb:hover{border-color:var(--accent3);background:rgba(255,230,0,0.05);}
+  .fnl-sep{color:var(--border);padding:0 3px;}
+  /* Layout toggle */
+  .layout-toggle{display:flex;gap:4px;margin-bottom:4px;}
+  .lt-btn{font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:2px;padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all 0.2s;flex:1;text-align:center;}
+  .lt-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+  .lt-btn.active{background:rgba(255,230,0,0.08);border-color:var(--accent3);color:var(--accent3);text-shadow:var(--glow3);}
+  /* LEADERBOARD */
+  #lb-ov{display:none;position:fixed;inset:0;z-index:500;background:rgba(8,12,16,0.93);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+  #lb-ov.show{display:flex;}
+  .lb-panel{background:var(--surface);border:1px solid var(--border);width:min(720px,96vw);max-height:82vh;display:flex;flex-direction:column;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));}
+  .lb-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(255,230,0,0.06),transparent);}
+  .lb-ttl{font-family:'Orbitron',monospace;font-size:0.85rem;font-weight:900;letter-spacing:4px;color:var(--accent3);text-shadow:var(--glow3);}
+  .lb-x{font-size:0.62rem;letter-spacing:2px;color:var(--dim);background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
+  .lb-x:hover{color:var(--accent2);border-color:var(--accent2);}
+  .lb-bdy{padding:16px 20px;overflow-y:auto;flex:1;}
+  .lb-tbl{width:100%;border-collapse:collapse;font-size:0.7rem;}
+  .lb-tbl th{text-align:left;font-size:0.55rem;letter-spacing:3px;color:var(--dim);padding:0 8px 10px;border-bottom:1px solid var(--border);}
+  .lb-tbl td{padding:8px 8px;border-bottom:1px solid rgba(26,42,58,0.5);}
+  .lb-tbl tr:hover td{background:rgba(255,255,255,0.02);}
+  .lbr{font-family:'Orbitron',monospace;font-weight:900;}
+  .r1{color:#ffe600;text-shadow:0 0 12px #ffe60055}.r2{color:#c8d8e8}.r3{color:#c9a84c}
+  .lbv{color:var(--accent3);font-family:'Orbitron',monospace;}
+  .lb-empty{text-align:center;color:var(--dim);font-size:0.72rem;letter-spacing:2px;padding:36px 0;}
+  .lb-clr{font-size:0.58rem;letter-spacing:2px;color:var(--dim);background:none;border:1px solid var(--border);padding:4px 9px;cursor:pointer;font-family:'Share Tech Mono',monospace;margin-top:14px;transition:all 0.2s;float:right;}
+  .lb-clr:hover{color:var(--accent2);border-color:var(--accent2);}
+</style>
+</head>
+<body>
+
+<nav class="forge-nav">
+  <a class="forge-nav-logo" href="index.html">⬡ FORGE HUB</a>
+  <div class="forge-nav-links">
+    <a class="fnl" href="index.html">Game Modes</a>
+    <span class="fnl-sep">|</span>
+    <a class="fnl" href="aim-trainer-v2.html">Aim Forge</a>
+    <a class="fnl" href="apex-aim-lab.html">Apex Aim Lab</a>
+    <a class="fnl cur" href="move-trainer-azerty-v2.html">Move Forge</a>
+    <span class="fnl-sep">|</span>
+    <button class="fnl lb" onclick="openLB()">🏆 Leaderboard</button>
+  </div>
+</nav>
+
+<header>
+  <div class="logo">MOVE<span>FORGE</span></div>
+  <div class="badge" id="layout-badge">AZERTY · MOUVEMENT CLAVIER</div>
+</header>
+
+<main>
+  <aside>
+    <div>
+      <div class="section-label">Disposition clavier</div>
+      <div class="layout-toggle">
+        <button class="lt-btn active" id="lt-azerty" onclick="setLayout('azerty')">AZERTY</button>
+        <button class="lt-btn" id="lt-qwerty" onclick="setLayout('qwerty')">QWERTY</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Exercice</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="exercise-btn active" onclick="selectExercise(0)" id="ex-btn-0">
+          01 — DIRECTIONS DE BASE
+          <span class="ex-sub">Z Q S D + ESPACE · 5 touches</span>
+        </button>
+        <button class="exercise-btn" onclick="selectExercise(1)" id="ex-btn-1">
+          02 — COMBOS
+          <span class="ex-sub">Diagonales + SHIFT-sprint · CTRL-crouch</span>
+        </button>
+        <button class="exercise-btn" onclick="selectExercise(2)" id="ex-btn-2">
+          03 — SÉQUENCES RAPIDES
+          <span class="ex-sub">Toutes les touches · 7 boutons</span>
+        </button>
+        <button class="exercise-btn" onclick="selectExercise(3)" id="ex-btn-3">
+          04 — NAVIGATION LIBRE
+          <span class="ex-sub">SHIFT=sprint · CTRL=crouch · cibles</span>
+        </button>
+        <button class="exercise-btn" onclick="selectExercise(4)" id="ex-btn-4">
+          05 — ESQUIVE D'OBSTACLES
+          <span class="ex-sub">Sprint/crouch stratégiques · zones rouges</span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Options</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.68rem;color:var(--dim);">
+        <div>DURÉE — <span id="dur-val" style="color:var(--accent)">60</span>s
+          <br><input type="range" min="20" max="120" step="10" value="60" oninput="settings.dur=+this.value;document.getElementById('dur-val').textContent=this.value" style="-webkit-appearance:none;width:100%;height:3px;background:var(--border);outline:none;margin-top:5px;">
+        </div>
+        <div>VITESSE — <span id="spd-val" style="color:var(--accent)">4</span>
+          <br><input type="range" min="2" max="10" value="4" oninput="settings.playerSpeed=+this.value;document.getElementById('spd-val').textContent=this.value" style="-webkit-appearance:none;width:100%;height:3px;background:var(--border);outline:none;margin-top:5px;">
+        </div>
+      </div>
+    </div>
+
+    <button class="start-btn" id="start-btn" onclick="toggleGame()">► DÉMARRER</button>
+
+    <div class="section-label" style="margin-top:4px;">Session</div>
+    <div class="stat-block">
+      SCORE: <span id="s-score">—</span><br>
+      ERREURS: <span id="s-errors">—</span><br>
+      PRÉCISION: <span id="s-acc">—</span>
+    </div>
+
+    <div>
+      <div class="section-label">Touches actives</div>
+      <div id="key-ref" style="font-size:0.62rem;color:var(--dim);line-height:2;"></div>
+    </div>
+  </aside>
+
+  <div id="arena">
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-box">TEMPS<span class="val" id="hud-time">00</span></div>
+      <div class="hud-box">SCORE<span class="val green" id="hud-score">0</span></div>
+      <div class="hud-box">ERREURS<span class="val red" id="hud-errors">0</span></div>
+      <div class="hud-box">STREAK<span class="val" id="hud-streak">0</span></div>
+      <div class="hud-box" id="hud-state-box" style="display:none;">ÉTAT<span class="val" id="hud-state" style="font-size:0.75rem;letter-spacing:1px">● NORMAL</span></div>
+    </div>
+
+    <div id="ex-desc"></div>
+
+    <!-- Player -->
+    <div id="player" style="display:none;"></div>
+
+    <!-- Dir prompt -->
+    <div id="dir-prompt">
+      <div id="ready-msg">SÉLECTIONNE UN EXERCICE ET CLIQUE DÉMARRER</div>
+      <div id="combo-display" style="display:none;"></div>
+    </div>
+
+    <!-- Keyboard visual -->
+    <div id="kb-display"></div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <div id="results-overlay">
+      <div class="result-title">// RÉSULTATS //</div>
+      <div class="result-grid">
+        <div class="result-card"><div class="r-label">SCORE</div><div class="r-val" id="r-score">—</div></div>
+        <div class="result-card"><div class="r-label">ERREURS</div><div class="r-val" id="r-errors">—</div></div>
+        <div class="result-card"><div class="r-label">PRÉCISION</div><div class="r-val" id="r-acc">—</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:340px;">
+        <label style="font-size:0.62rem;letter-spacing:3px;color:var(--dim);align-self:flex-start">PLAYER NAME</label>
+        <input id="player-name" type="text" maxlength="24" placeholder="Enter your name..." style="width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:0.85rem;letter-spacing:2px;padding:10px 14px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent3)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')saveToLB()">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="replay-btn" onclick="closeResults()">REJOUER</button>
+        <button class="replay-btn" onclick="saveToLB()" style="border-color:var(--accent3);color:var(--accent3);box-shadow:var(--glow3)">🏆 SAVE TO LEADERBOARD</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- LEADERBOARD -->
+<div id="lb-ov">
+  <div class="lb-panel">
+    <div class="lb-hdr">
+      <div class="lb-ttl">🏆 MOVE FORGE — LEADERBOARD</div>
+      <button class="lb-x" onclick="closeLB()">✕ CLOSE</button>
+    </div>
+    <div class="lb-bdy" id="lb-bdy"></div>
+  </div>
+</div>
+
+<script>
+// ============ KEYBOARD LAYOUTS ============
+const LAYOUTS = {
+  azerty: {
+    up:     { key: 'z',       label: 'Z',      arrow: '↑',  desc: 'Avancer' },
+    left:   { key: 'q',       label: 'Q',      arrow: '←',  desc: 'Gauche' },
+    down:   { key: 's',       label: 'S',      arrow: '↓',  desc: 'Reculer' },
+    right:  { key: 'd',       label: 'D',      arrow: '→',  desc: 'Droite' },
+    action: { key: ' ',       label: 'ESPACE', arrow: '⬆',  desc: 'Saut' },
+    sprint: { key: 'shift',   label: 'SHIFT',  arrow: '⚡',  desc: 'Sprint' },
+    crouch: { key: 'control', label: 'CTRL',   arrow: '⬇',  desc: 'Crouch' },
+  },
+  qwerty: {
+    up:     { key: 'w',       label: 'W',     arrow: '↑',  desc: 'Forward' },
+    left:   { key: 'a',       label: 'A',     arrow: '←',  desc: 'Left' },
+    down:   { key: 's',       label: 'S',     arrow: '↓',  desc: 'Back' },
+    right:  { key: 'd',       label: 'D',     arrow: '→',  desc: 'Right' },
+    action: { key: ' ',       label: 'SPACE', arrow: '⬆',  desc: 'Jump' },
+    sprint: { key: 'shift',   label: 'SHIFT', arrow: '⚡',  desc: 'Sprint' },
+    crouch: { key: 'control', label: 'CTRL',  arrow: '⬇',  desc: 'Crouch' },
+  }
+};
+
+let currentLayout = 'azerty';
+// MOVE_KEYS will be rebuilt dynamically
+let MOVE_KEYS = {};
+
+function setLayout(layout) {
+  currentLayout = layout;
+  document.getElementById('lt-azerty').classList.toggle('active', layout === 'azerty');
+  document.getElementById('lt-qwerty').classList.toggle('active', layout === 'qwerty');
+  document.getElementById('layout-badge').textContent = layout.toUpperCase() + ' · MOUVEMENT CLAVIER';
+
+  // Rebuild MOVE_KEYS keyed by the actual key char (includes SPACE, SHIFT, CTRL)
+  MOVE_KEYS = {};
+  for (const [dir, info] of Object.entries(LAYOUTS[layout])) {
+    MOVE_KEYS[info.key] = { dir, label: info.label, arrow: info.arrow, desc: info.desc };
+  }
+
+  // Update key ref sidebar
+  const ref = document.getElementById('key-ref');
+  const L = LAYOUTS[layout];
+  ref.innerHTML = `
+    <span style="color:var(--accent)">${L.up.label}</span> → ${L.up.desc}<br>
+    <span style="color:var(--accent)">${L.left.label}</span> → ${L.left.desc}<br>
+    <span style="color:var(--accent)">${L.down.label}</span> → ${L.down.desc}<br>
+    <span style="color:var(--accent)">${L.right.label}</span> → ${L.right.desc}<br>
+    <span style="color:var(--accent3)">${L.action.label}</span> → ${L.action.desc}<br>
+    <span style="color:var(--accent2)">${L.sprint.label}</span> → ${L.sprint.desc} <span style="color:var(--dim)">(×1.8 vitesse)</span><br>
+    <span style="color:#b06fff">${L.crouch.label}</span> → ${L.crouch.desc} <span style="color:var(--dim)">(×0.4 vitesse)</span>
+  `;
+
+  buildKeyboard();
+  if (gameRunning) stopGame();
+}
+
+const DIAGONALS_FN = () => {
+  const L = LAYOUTS[currentLayout];
+  return [
+    { keys: [L.up.key,    L.left.key],   arrow: '↖', label: L.up.label + L.left.label },
+    { keys: [L.up.key,    L.right.key],  arrow: '↗', label: L.up.label + L.right.label },
+    { keys: [L.down.key,  L.left.key],   arrow: '↙', label: L.down.label + L.left.label },
+    { keys: [L.down.key,  L.right.key],  arrow: '↘', label: L.down.label + L.right.label },
+    { keys: [L.up.key,    L.sprint.key], arrow: '⚡↑', label: L.sprint.label + '+' + L.up.label, isSprint: true },
+    { keys: [L.up.key,    L.crouch.key], arrow: '⬇↑', label: L.crouch.label + '+' + L.up.label, isCrouch: true },
+  ];
+};
+
+const settings = { dur: 60, playerSpeed: 4 };
+let currentExercise = 0;
+let gameRunning = false;
+let score = 0, errors = 0, streak = 0;
+let timerLeft = 60;
+let timerInterval = null;
+let animFrame = null;
+let lastFrameTime = 0;
+
+// Player state
+let playerX = 0, playerY = 0;
+let pressedKeys = new Set();
+
+// Exercise state
+let currentPrompt = null;  // for ex 0,1: { code, arrow } or array
+let comboSequence = [];
+let comboIndex = 0;
+let comboWrongFlash = false;
+
+// For ex 3 (free nav) & ex 4 (dodge)
+let targets = [];
+let obstacles = [];
+let nextObstacleTime = 0;
+
+const arena = document.getElementById('arena');
+const player = document.getElementById('player');
+
+// ============ BUILD KEYBOARD UI ============
+function buildKeyboard() {
+  const kb = document.getElementById('kb-display');
+  kb.innerHTML = '';
+  const L = LAYOUTS[currentLayout];
+
+  const cluster = document.createElement('div');
+  cluster.style.cssText = 'display:flex;flex-direction:column;gap:5px;align-items:center;margin-bottom:8px;';
+
+  // Row 1: up
+  const row1 = document.createElement('div');
+  row1.className = 'kb-row';
+  row1.appendChild(makeKey(L.up.label, L.up.key, true, 'var(--accent)'));
+
+  // Row 2: left/down/right
+  const row2 = document.createElement('div');
+  row2.className = 'kb-row';
+  [L.left, L.down, L.right].forEach(k => row2.appendChild(makeKey(k.label, k.key, true, 'var(--accent)')));
+
+  // Row 3: SPACE
+  const row3 = document.createElement('div');
+  row3.className = 'kb-row';
+  const space = document.createElement('div');
+  space.className = 'key xwide move-key';
+  space.id = 'key- ';
+  space.style.borderColor = 'rgba(255,230,0,0.4)';
+  space.style.color = 'rgba(255,230,0,0.7)';
+  space.innerHTML = L.action.label + `<div class="key-sub">${L.action.desc}</div>`;
+  row3.appendChild(space);
+
+  // Row 4: SHIFT + CTRL
+  const row4 = document.createElement('div');
+  row4.className = 'kb-row';
+  const shift = makeKey(L.sprint.label, L.sprint.key, true, 'var(--accent2)');
+  shift.style.width = '80px';
+  shift.style.borderColor = 'rgba(255,60,110,0.4)';
+  shift.style.color = 'rgba(255,60,110,0.7)';
+  const ctrl = makeKey(L.crouch.label, L.crouch.key, true, '#b06fff');
+  ctrl.style.width = '68px';
+  ctrl.style.borderColor = 'rgba(176,111,255,0.4)';
+  ctrl.style.color = 'rgba(176,111,255,0.7)';
+  row4.appendChild(shift);
+  row4.appendChild(ctrl);
+
+  cluster.appendChild(row1);
+  cluster.appendChild(row2);
+  cluster.appendChild(row3);
+  cluster.appendChild(row4);
+  kb.appendChild(cluster);
+}
+
+function makeKey(label, code, isMove, accentColor) {
+  const el = document.createElement('div');
+  el.className = 'key' + (isMove ? ' move-key' : '');
+  el.id = 'key-' + code;
+  const sub = MOVE_KEYS[code] ? MOVE_KEYS[code].desc : '';
+  el.innerHTML = label + (sub ? `<div class="key-sub">${sub}</div>` : '');
+  return el;
+}
+
+function highlightKey(code, type) {
+  const el = document.getElementById('key-' + code);
+  if (!el) return;
+  el.classList.remove('highlighted','pressed','pressed-wrong');
+  if (type) el.classList.add(type);
+}
+
+function clearAllHighlights() {
+  document.querySelectorAll('.key').forEach(k => k.classList.remove('highlighted','pressed','pressed-wrong'));
+}
+
+// ============ EXERCISE SELECTION ============
+const EX_DESCS = [
+  'DIRECTIONS DE BASE — Z/Q/S/D + ESPACE · appuie sur la touche indiquée',
+  'COMBOS — Diagonales + combos SHIFT/CTRL · maintiens les deux touches',
+  'SÉQUENCES — Toutes les touches Z/Q/S/D/ESPACE/SHIFT/CTRL dans l\'ordre',
+  'NAVIGATION LIBRE — SHIFT=sprint · CTRL=crouch · guide le point vers les cibles',
+  'ESQUIVE — SHIFT/CTRL stratégiques · navigue et évite les zones rouges',
+];
+
+function selectExercise(idx) {
+  currentExercise = idx;
+  document.querySelectorAll('.exercise-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.getElementById('ex-desc').textContent = EX_DESCS[idx];
+  // Show state HUD only for movement exercises (3 & 4)
+  const stateBox = document.getElementById('hud-state-box');
+  if (stateBox) stateBox.style.display = (idx >= 3) ? '' : 'none';
+  if (gameRunning) { stopGame(); }
+}
+
+// ============ INPUT ============
+// Normalize key: lowercase, space stays ' ', Shift → 'shift', Control → 'control'
+function normKey(e) {
+  if (e.key === ' ') return ' ';
+  if (e.key === 'Shift') return 'shift';
+  if (e.key === 'Control') return 'control';
+  return e.key.toLowerCase();
+}
+
+document.addEventListener('keydown', e => {
+  const k = normKey(e);
+  if (pressedKeys.has(k)) return;
+  pressedKeys.add(k);
+
+  // Prevent default for space, ctrl (avoid browser shortcuts)
+  if (e.key === ' ' || e.code === 'Space') e.preventDefault();
+  if (e.key === 'Control') e.preventDefault();
+
+  if (!gameRunning) return;
+
+  // Visual press for all known move keys including shift/ctrl/space
+  if (MOVE_KEYS[k]) highlightKey(k, 'pressed');
+
+  // Handle per exercise
+  if (currentExercise === 0) handleEx0(k);
+  else if (currentExercise === 1) handleEx1(k);
+  else if (currentExercise === 2) handleEx2(k);
+  // Ex 3 & 4 use game loop movement
+});
+
+document.addEventListener('keyup', e => {
+  const k = normKey(e);
+  pressedKeys.delete(k);
+  if (MOVE_KEYS[k]) {
+    const el = document.getElementById('key-' + k);
+    if (el) { el.classList.remove('pressed','pressed-wrong'); el.classList.add('move-key'); }
+  }
+});
+
+// ============ EXERCISE 0 — Basic Directions ============
+// Direction-only keys for basic drill (excludes sprint/crouch for simplicity at this level)
+function ex0Keys() {
+  const L = LAYOUTS[currentLayout];
+  return [L.up.key, L.left.key, L.down.key, L.right.key, L.action.key];
+}
+
+function pickNewDirection() {
+  const keys = ex0Keys();
+  const code = keys[Math.floor(Math.random() * keys.length)];
+  currentPrompt = code;
+  clearAllHighlights();
+  highlightKey(code, 'highlighted');
+  const color = code === ' ' ? 'var(--accent3)' : null;
+  updateComboDisplay([{ arrow: MOVE_KEYS[code].arrow, state: 'current', color }]);
+}
+
+function handleEx0(code) {
+  // Accept: movement keys + space. Ignore shift/ctrl as wrong (not in pool for ex0)
+  if (!ex0Keys().includes(code)) { return; }
+  if (code === currentPrompt) {
+    scoreHit();
+    pickNewDirection();
+  } else {
+    scoreError(code);
+    pickNewDirection();
+  }
+}
+
+// ============ EXERCISE 1 — Diagonals ============
+let diagTarget = null;
+let diagHeldKeys = new Set();
+
+function pickNewDiagonal() {
+  const DIAGONALS = DIAGONALS_FN();
+  diagTarget = DIAGONALS[Math.floor(Math.random() * DIAGONALS.length)];
+  diagHeldKeys = new Set();
+  clearAllHighlights();
+  diagTarget.keys.forEach(k => highlightKey(k, 'highlighted'));
+
+  // Build combo display — color sprint/crouch differently
+  const items = [];
+  diagTarget.keys.forEach((k, i) => {
+    if (i > 0) items.push({ arrow: '+', state: 'current' });
+    const mk = MOVE_KEYS[k];
+    items.push({
+      arrow: mk ? mk.arrow : k,
+      state: 'current',
+      color: k === 'shift' ? 'var(--accent2)' : k === 'control' ? '#b06fff' : k === ' ' ? 'var(--accent3)' : null
+    });
+  });
+  updateComboDisplay(items);
+}
+
+function handleEx1(code) {
+  if (!diagTarget) return;
+  if (diagTarget.keys.includes(code)) {
+    diagHeldKeys.add(code);
+    highlightKey(code, 'pressed');
+    if (diagHeldKeys.size === 2 && diagTarget.keys.every(k => diagHeldKeys.has(k))) {
+      scoreHit();
+      setTimeout(() => pickNewDiagonal(), 200);
+    }
+  } else {
+    if (MOVE_KEYS[code]) scoreError(code);
+  }
+}
+
+// ============ EXERCISE 2 — Sequences (all keys including space/shift/ctrl) ============
+function ex2Keys() {
+  // All 7 keys: directions + space + shift + ctrl
+  return Object.keys(MOVE_KEYS);
+}
+
+function genSequence(len = 4) {
+  const keys = ex2Keys();
+  const seq = [];
+  let last = null;
+  for (let i = 0; i < len; i++) {
+    let k;
+    do { k = keys[Math.floor(Math.random() * keys.length)]; } while (k === last);
+    seq.push(k);
+    last = k;
+  }
+  return seq;
+}
+
+function startNewSequence() {
+  const len = 3 + Math.floor(score / 5);
+  comboSequence = genSequence(Math.min(len, 7));
+  comboIndex = 0;
+  clearAllHighlights();
+  highlightKey(comboSequence[0], 'highlighted');
+  renderSequence();
+}
+
+function renderSequence() {
+  const items = comboSequence.map((k, i) => {
+    const mk = MOVE_KEYS[k];
+    return {
+      arrow: mk ? mk.arrow : k,
+      state: i < comboIndex ? 'done' : i === comboIndex ? 'current' : '',
+      color: i === comboIndex
+        ? (k === 'shift' ? 'var(--accent2)' : k === 'control' ? '#b06fff' : k === ' ' ? 'var(--accent3)' : null)
+        : null
+    };
+  });
+  updateComboDisplay(items);
+}
+
+function handleEx2(code) {
+  if (!MOVE_KEYS[code]) { return; } // ignore keys not in MOVE_KEYS
+  if (code === comboSequence[comboIndex]) {
+    highlightKey(code, 'pressed');
+    comboIndex++;
+    streak++;
+    document.getElementById('hud-streak').textContent = streak;
+    if (comboIndex >= comboSequence.length) {
+      score += comboSequence.length;
+      document.getElementById('hud-score').textContent = score;
+      spawnScorePop('+' + comboSequence.length, arena.clientWidth / 2, arena.clientHeight / 2 - 60);
+      setTimeout(() => startNewSequence(), 250);
+    } else {
+      clearAllHighlights();
+      highlightKey(comboSequence[comboIndex], 'highlighted');
+      renderSequence();
+    }
+  } else {
+    scoreError(code);
+    comboIndex = 0;
+    clearAllHighlights();
+    highlightKey(comboSequence[0], 'highlighted');
+    renderSequence();
+  }
+}
+
+// ============ EXERCISE 3 & 4 — Movement ============
+function initPlayerPos() {
+  playerX = arena.clientWidth / 2;
+  playerY = arena.clientHeight / 2;
+  updatePlayerPos();
+}
+
+function updatePlayerPos() {
+  player.style.left = playerX + 'px';
+  player.style.top = playerY + 'px';
+}
+
+function spawnTarget() {
+  const margin = 60;
+  const tx = margin + Math.random() * (arena.clientWidth - margin * 2);
+  const ty = margin + 80 + Math.random() * (arena.clientHeight - margin * 2 - 100);
+  const el = document.createElement('div');
+  el.className = 'target-zone';
+  const size = 50;
+  el.style.cssText = `left:${tx}px;top:${ty}px;width:${size}px;height:${size}px;`;
+  arena.appendChild(el);
+  targets.push({ el, x: tx, y: ty, r: size / 2, reached: false });
+}
+
+function spawnObstacle() {
+  const w = 60 + Math.random() * 100;
+  const h = 40 + Math.random() * 80;
+  const tx = 20 + Math.random() * (arena.clientWidth - w - 40);
+  const ty = 80 + Math.random() * (arena.clientHeight - h - 120);
+  const el = document.createElement('div');
+  el.className = 'obstacle';
+  el.style.cssText = `left:${tx}px;top:${ty}px;width:${w}px;height:${h}px;`;
+  arena.appendChild(el);
+  obstacles.push({ el, x: tx, y: ty, w, h });
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.5s';
+    setTimeout(() => { el.remove(); obstacles = obstacles.filter(o => o.el !== el); }, 500);
+  }, 3000);
+}
+
+function checkTargets() {
+  targets = targets.filter(t => {
+    if (t.reached) return false;
+    const dx = playerX - t.x, dy = playerY - t.y;
+    if (Math.sqrt(dx * dx + dy * dy) < t.r + 12) {
+      t.reached = true;
+      t.el.classList.add('reached');
+      scoreHit();
+      spawnScorePop('+10', playerX, playerY - 20, 10);
+      setTimeout(() => { t.el.remove(); spawnTarget(); }, 400);
+      return false;
+    }
+    return true;
+  });
+}
+
+function checkObstacles() {
+  for (const o of obstacles) {
+    if (playerX > o.x && playerX < o.x + o.w && playerY > o.y && playerY < o.y + o.h) {
+      errors++;
+      streak = 0;
+      document.getElementById('hud-errors').textContent = errors;
+      document.getElementById('hud-streak').textContent = 0;
+      // Push player out
+      playerX = Math.max(20, Math.min(arena.clientWidth - 20, playerX + (Math.random() < 0.5 ? -30 : 30)));
+      playerY = Math.max(80, Math.min(arena.clientHeight - 80, playerY + (Math.random() < 0.5 ? -30 : 30)));
+      // Flash red briefly — movement loop will restore correct state next frame
+      player.style.boxShadow = '0 0 28px #ff3c6e, 0 0 50px rgba(255,60,110,0.5)';
+      player.style.transform = 'translate(-50%,-50%) scale(1.3)';
+      setTimeout(() => {
+        // Only restore if still running and not being overridden by sprint/crouch
+        if (gameRunning) {
+          const L = LAYOUTS[currentLayout];
+          const sp = pressedKeys.has(L.sprint.key);
+          const cr = pressedKeys.has(L.crouch.key);
+          if (!sp && !cr) {
+            player.style.boxShadow = '0 0 14px var(--accent), 0 0 30px rgba(0,240,255,0.3)';
+            player.style.transform = 'translate(-50%,-50%) scale(1)';
+          }
+        }
+      }, 350);
+    }
+  }
+}
+
+function movementLoop(t) {
+  if (!gameRunning) return;
+  const dt = Math.min(t - lastFrameTime, 50);
+  lastFrameTime = t;
+
+  const L = LAYOUTS[currentLayout];
+  const isSprinting = pressedKeys.has(L.sprint.key);
+  const isCrouching = pressedKeys.has(L.crouch.key);
+
+  // Speed multiplier: sprint > normal > crouch (sprint takes priority)
+  const speedMult = isSprinting ? 1.8 : isCrouching ? 0.4 : 1.0;
+  const spd = settings.playerSpeed * speedMult * dt / 16;
+  let moved = false;
+
+  // Highlight all currently pressed move keys
+  Object.keys(MOVE_KEYS).forEach(code => {
+    const el = document.getElementById('key-' + code);
+    if (!el) return;
+    if (pressedKeys.has(code)) el.classList.add('pressed');
+    else el.classList.remove('pressed');
+  });
+
+  // Update player visual for sprint/crouch states
+  if (isSprinting) {
+    player.style.boxShadow = '0 0 20px #ff3c6e, 0 0 40px rgba(255,60,110,0.4)';
+    player.style.transform = 'translate(-50%,-50%) scale(1.15)';
+  } else if (isCrouching) {
+    player.style.boxShadow = '0 0 14px #b06fff, 0 0 28px rgba(176,111,255,0.3)';
+    player.style.transform = 'translate(-50%,-50%) scale(0.75)';
+  } else {
+    player.style.boxShadow = '0 0 14px var(--accent), 0 0 30px rgba(0,240,255,0.3)';
+    player.style.transform = 'translate(-50%,-50%) scale(1)';
+  }
+
+  // Update HUD state badge
+  const badge = document.getElementById('hud-state');
+  if (badge) {
+    if (isSprinting)      { badge.textContent = '⚡ SPRINT'; badge.style.color = '#ff3c6e'; }
+    else if (isCrouching) { badge.textContent = '⬇ CROUCH'; badge.style.color = '#b06fff'; }
+    else                  { badge.textContent = '● NORMAL'; badge.style.color = 'var(--dim)'; }
+  }
+
+  if (pressedKeys.has(L.up.key))    { playerY -= spd; moved = true; }
+  if (pressedKeys.has(L.down.key))  { playerY += spd; moved = true; }
+  if (pressedKeys.has(L.left.key))  { playerX -= spd; moved = true; }
+  if (pressedKeys.has(L.right.key)) { playerX += spd; moved = true; }
+
+  // Clamp
+  playerX = Math.max(12, Math.min(arena.clientWidth - 12, playerX));
+  playerY = Math.max(80, Math.min(arena.clientHeight - 80, playerY));
+
+  if (moved) updatePlayerPos();
+
+  checkTargets();
+  if (currentExercise === 4) checkObstacles();
+
+  animFrame = requestAnimationFrame(movementLoop);
+}
+
+// ============ SCORING ============
+function scoreHit() {
+  score++;
+  streak++;
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-streak').textContent = streak;
+}
+
+function scoreError(code) {
+  errors++;
+  streak = 0;
+  document.getElementById('hud-errors').textContent = errors;
+  document.getElementById('hud-streak').textContent = 0;
+  if (code && MOVE_KEYS[code]) flashWrong(code);
+}
+
+function flashWrong(code) {
+  const el = document.getElementById('key-' + code);
+  if (!el) return;
+  el.classList.add('pressed-wrong');
+  setTimeout(() => { el.classList.remove('pressed-wrong'); }, 300);
+}
+
+function spawnScorePop(text, x, y, val = 1) {
+  const el = document.createElement('div');
+  el.className = 'score-pop';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+// ============ COMBO DISPLAY ============
+function updateComboDisplay(items) {
+  const cd = document.getElementById('combo-display');
+  cd.innerHTML = '';
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'combo-arrow ' + (item.state || '');
+    el.textContent = item.arrow;
+    if (item.color) el.style.color = item.color;
+    cd.appendChild(el);
+  });
+}
+
+// ============ START / STOP ============
+function toggleGame() {
+  if (gameRunning) stopGame(); else startGame();
+}
+
+function startGame() {
+  gameRunning = true;
+  score = 0; errors = 0; streak = 0; comboIndex = 0;
+  timerLeft = settings.dur;
+  pressedKeys.clear(); // clear any held keys from before start
+  document.getElementById('hud-score').textContent = 0;
+  document.getElementById('hud-errors').textContent = 0;
+  document.getElementById('hud-streak').textContent = 0;
+  document.getElementById('hud-time').textContent = String(timerLeft).padStart(2,'0');
+  document.getElementById('ready-msg').style.display = 'none';
+  document.getElementById('results-overlay').classList.remove('show');
+  document.getElementById('start-btn').textContent = '■ STOP';
+  document.getElementById('start-btn').classList.add('stop');
+  document.getElementById('ex-desc').textContent = EX_DESCS[currentExercise];
+
+  // Show/hide state HUD box (only for movement modes)
+  const stateBox = document.getElementById('hud-state-box');
+  if (stateBox) stateBox.style.display = (currentExercise >= 3) ? '' : 'none';
+  const badge = document.getElementById('hud-state');
+  if (badge) { badge.textContent = '● NORMAL'; badge.style.color = 'var(--dim)'; }
+
+  // Reset player visual
+  player.style.boxShadow = '0 0 14px var(--accent), 0 0 30px rgba(0,240,255,0.3)';
+  player.style.transform = 'translate(-50%,-50%) scale(1)';
+
+  // Clear arena targets/obstacles
+  targets.forEach(t => t.el.remove()); targets = [];
+  obstacles.forEach(o => o.el.remove()); obstacles = [];
+
+  timerInterval = setInterval(() => {
+    timerLeft--;
+    document.getElementById('hud-time').textContent = String(timerLeft).padStart(2,'0');
+    document.getElementById('progress-fill').style.width = ((settings.dur - timerLeft) / settings.dur * 100) + '%';
+    if (timerLeft <= 0) endGame();
+  }, 1000);
+
+  // Init exercise
+  if (currentExercise === 0) {
+    document.getElementById('combo-display').style.display = 'flex';
+    player.style.display = 'none';
+    pickNewDirection();
+  } else if (currentExercise === 1) {
+    document.getElementById('combo-display').style.display = 'flex';
+    player.style.display = 'none';
+    pickNewDiagonal();
+  } else if (currentExercise === 2) {
+    document.getElementById('combo-display').style.display = 'flex';
+    player.style.display = 'none';
+    startNewSequence();
+  } else {
+    document.getElementById('combo-display').style.display = 'none';
+    player.style.display = '';
+    initPlayerPos();
+    for (let i = 0; i < (currentExercise === 4 ? 2 : 3); i++) spawnTarget();
+    if (currentExercise === 4) {
+      nextObstacleTime = Date.now() + 1500;
+      const obstacleSpawner = setInterval(() => {
+        if (!gameRunning) { clearInterval(obstacleSpawner); return; }
+        spawnObstacle();
+      }, 2000);
+    }
+    lastFrameTime = performance.now();
+    animFrame = requestAnimationFrame(movementLoop);
+  }
+}
+
+function stopGame() {
+  gameRunning = false;
+  clearInterval(timerInterval);
+  if (animFrame) cancelAnimationFrame(animFrame);
+  clearAllHighlights();
+  pressedKeys.clear();
+  document.getElementById('combo-display').style.display = 'none';
+  document.getElementById('ready-msg').style.display = '';
+  document.getElementById('start-btn').textContent = '► DÉMARRER';
+  document.getElementById('start-btn').classList.remove('stop');
+  player.style.display = 'none';
+  player.style.boxShadow = '0 0 14px var(--accent), 0 0 30px rgba(0,240,255,0.3)';
+  player.style.transform = 'translate(-50%,-50%) scale(1)';
+  // Reset state HUD
+  const badge = document.getElementById('hud-state');
+  if (badge) { badge.textContent = '● NORMAL'; badge.style.color = 'var(--dim)'; }
+  const stateBox = document.getElementById('hud-state-box');
+  if (stateBox) stateBox.style.display = 'none';
+  targets.forEach(t => t.el.remove()); targets = [];
+  obstacles.forEach(o => o.el.remove()); obstacles = [];
+  currentPrompt = null;
+  comboSequence = [];
+}
+
+function endGame() {
+  const finalScore = score;
+  const finalErrors = errors;
+  stopGame();
+  const total = finalScore + finalErrors;
+  const acc = total > 0 ? Math.round(finalScore / total * 100) : 0;
+  document.getElementById('r-score').textContent = finalScore;
+  document.getElementById('r-errors').textContent = finalErrors;
+  document.getElementById('r-acc').textContent = acc + '%';
+  document.getElementById('results-overlay').classList.add('show');
+  document.getElementById('s-score').textContent = finalScore;
+  document.getElementById('s-errors').textContent = finalErrors;
+  document.getElementById('s-acc').textContent = acc + '%';
+  const exNames = ['DIRECTIONS','DIAGONALES','SÉQUENCES','NAV LIBRE','ESQUIVE'];
+  _lastResult = {
+    date: new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    mode: exNames[currentExercise] || '—',
+    layout: currentLayout.toUpperCase(),
+    score: finalScore,
+    errors: finalErrors,
+    acc
+  };
+}
+
+function closeResults() {
+  document.getElementById('results-overlay').classList.remove('show');
+  document.getElementById('ready-msg').style.display = '';
+}
+
+// ===== LEADERBOARD =====
+let _lastResult = null;
+function saveToLB() {
+  if (!_lastResult) return;
+  const nameInput = document.getElementById('player-name');
+  const name = (nameInput.value.trim() || 'ANONYMOUS').toUpperCase();
+  const key = 'forge_lb_move';
+  const raw = localStorage.getItem(key);
+  const arr = raw ? JSON.parse(raw) : [];
+  arr.push({ ..._lastResult, name });
+  arr.sort((a,b) => b.score - a.score || b.acc - a.acc);
+  if (arr.length > 20) arr.length = 20;
+  localStorage.setItem(key, JSON.stringify(arr));
+  nameInput.value = '';
+  openLB();
+}
+function openLB() { document.getElementById('lb-ov').classList.add('show'); renderLB(); }
+function closeLB() { document.getElementById('lb-ov').classList.remove('show'); }
+document.getElementById('lb-ov').addEventListener('click', e => { if (e.target.id === 'lb-ov') closeLB(); });
+function renderLB() {
+  const raw = localStorage.getItem('forge_lb_move');
+  const entries = raw ? JSON.parse(raw) : [];
+  const bdy = document.getElementById('lb-bdy');
+  if (!entries.length) { bdy.innerHTML = '<div class="lb-empty">// NO SESSIONS RECORDED YET //</div>'; return; }
+  let h = `<table class="lb-tbl"><thead><tr><th>#</th><th>PLAYER</th><th>DATE</th><th>EXERCICE</th><th>LAYOUT</th><th>SCORE</th><th>ERREURS</th><th>PRÉCISION</th></tr></thead><tbody>`;
+  entries.forEach((e, i) => {
+    const rc = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    h += `<tr>
+      <td><span class="lbr ${rc}">${medal}</span></td>
+      <td style="color:var(--accent3);font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700">${e.name||'ANONYMOUS'}</td>
+      <td style="color:var(--dim);font-size:0.62rem">${e.date}</td>
+      <td style="color:var(--dim)">${e.mode||'—'}</td>
+      <td style="color:var(--accent3)">${e.layout||'AZERTY'}</td>
+      <td class="lbv">${e.score}</td>
+      <td style="color:var(--accent2);font-family:'Orbitron',monospace">${e.errors}</td>
+      <td class="lbv">${e.acc}%</td>
+    </tr>`;
+  });
+  h += `</tbody></table><button class="lb-clr" onclick="clearLB()">✕ CLEAR BOARD</button>`;
+  bdy.innerHTML = h;
+}
+function clearLB() { if (confirm('Clear Move Forge leaderboard?')) { localStorage.removeItem('forge_lb_move'); renderLB(); } }
+
+// Init
+setLayout('azerty');
+document.getElementById('ex-desc').textContent = EX_DESCS[0];
+</script>
+</body>
+</html>
